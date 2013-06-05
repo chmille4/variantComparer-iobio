@@ -2,10 +2,10 @@
 
 # stop servers
 forever stop pageServer.js
-forever stop minion/services/bamBinnerServer.js
-forever stop minion/services/bamtoolsServer.js
-forever stop minion/services/vcflibServer.js
-forever stop minion/services/tabixServer.js
-forever stop minion/services/samtoolsVcfServer.js
-forever stop minion/services/freebayesServer.js
-forever stop minion/services/bcftoolsServer.js
+forever stop iobio/services/bamBinnerServer.js
+forever stop iobio/services/bamtoolsServer.js
+forever stop iobio/services/vcflibServer.js
+forever stop iobio/services/tabixServer.js
+forever stop iobio/services/samtoolsVcfServer.js
+forever stop iobio/services/freebayesServer.js
+forever stop iobio/services/bcftoolsServer.js
