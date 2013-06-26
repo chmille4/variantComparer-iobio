@@ -152,7 +152,7 @@
                     var elem = window.alignments[j]
                     if ( elem.indexOf('chrom'+getChromosome()) == -1 ) continue;
                     if ( window.runLocal ) 
-                        elem = elem.replace(/http:\/\/s3.amazonaws.com\/1000genomes\/data\/\S+\/alignment/, 'http://0.0.0.0/~chase/data');
+                        elem = elem.replace(/http:\/\/s3.amazonaws.com\/1000genomes\/data\/\S+\/alignment/, 'http://ec2-54-242-95-86.compute-1.amazonaws.com/~chase/data');
                     if ( elem.indexOf(bamGroups[i].name)  != -1 ) files.push( elem );
                }
                bams = bams.concat( files.slice(0,2) );
@@ -169,7 +169,7 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "http://0.0.0.0:8030?cmd="
+            var url = "http://ec2-23-20-163-151.compute-1.amazonaws.com:8030?cmd="
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -183,7 +183,7 @@
          
          function getBamHistogramUrl() {
             var bams = getBams();
-            var url = "http://0.0.0.0:8020?cmd="
+            var url = "http://ec2-54-242-163-187.compute-1.amazonaws.com:8020?cmd="
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -199,24 +199,24 @@
          function getStaticVcfUrl() {
             var chr = getChromosome();
             // var vcf = "-h 'http://s3.amazonaws.com/1000genomes/release/20110521/ALL.chr" + chr + ".phase1_release_v3.20101123.snps_indels_svs.genotypes.vcf.gz'";
-            if (window.runLocal) var baseUrl = "http://0.0.0.0/~chase/data";
+            if (window.runLocal) var baseUrl = "http://ec2-54-242-95-86.compute-1.amazonaws.com/~chase/data";
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            var url = "http://0.0.0.0:7090?cmd=" + vcf + " "
+            var url = "http://ec2-23-20-163-151.compute-1.amazonaws.com:7090?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             var urlKeep = 'http://0.0.0.0:7080?cmd=vcfkeepsamples - '
+             var urlKeep = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcfkeepsamples - '
                       + getStaticVcfUrl() + ' '
                       + getBamIds().join(' ');
              
-             var urlFixup = 'http://0.0.0.0:7080?cmd=vcffixup - ' + encodeURI(urlKeep) ;
+             var urlFixup = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffixup - ' + encodeURI(urlKeep) ;
              
-             var urlAc = 'http://0.0.0.0:7080?cmd=vcffilter -f "AC > 0" '
+             var urlAc = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "AC > 0" '
                      + encodeURI(urlFixup);            
 
              return encodeURI(urlAc);        
@@ -224,15 +224,15 @@
          
          
          function getFreebayesUrl() {
-            var urlF = "http://0.0.0.0:8080?cmd=-f /Users/chase/Tools/freebayes/data/hs_ref_chr"
+            var urlF = "http://ec2-50-19-207-171.compute-1.amazonaws.com:8080?cmd=-f ./data/references/hs_ref_chr"
                      + getChromosome() + ".fa"                     
                      + ' ' + getBamDataUrl();
                      
             var qualThresh = $("#freebayes-slider").val()
-            var urlQ = 'http://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var urlQ = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                       + encodeURI(urlF);
                       
-            var url = 'http://0.0.0.0:7080?cmd=vcffilter -f "TYPE = snp" '
+            var url = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "TYPE = snp" '
                     + encodeURI(urlQ);
             
             // filter on variantType - SNP only
@@ -241,13 +241,13 @@
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'http://0.0.0.0:8040?cmd=view -vcg '
-                      + encodeURI('http://0.0.0.0:8060?cmd=mpileup -uf /Users/chase/Tools/freebayes/data/hs_ref_chr'
+            var urlS = 'http://ec2-54-242-163-187.compute-1.amazonaws.com:8061?cmd=view -vcg '
+                      + encodeURI('http://ec2-54-234-247-160.compute-1.amazonaws.com:8060?cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
                       + ' ' + getBamDataUrl());
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'http://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var url = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                     + encodeURI(urlS);
             
             return encodeURI(url);
