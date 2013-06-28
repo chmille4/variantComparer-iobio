@@ -11,6 +11,7 @@ body {
    position: absolute;
    top: 10px;
    left: 35px;
+   color:#2d8fc1;
 }
 
 #title #subtitle {
@@ -87,4 +88,17 @@ input {
    border: rgb(130,130,130) 2px solid;
    margin-left: auto;
    margin-right: auto;
+}
+
+.bar-label-1 {
+   -webkit-transform: rotate(-90deg);
+   transform: rotate(-90deg);
+   font: 11px arial;
+   color:rgb(20,20,20);
+}
+
+.bar-label-2 {
+   -webkit-transform: rotate(20deg);
+   transform: rotate(20deg);
+   font: 11px arial;
 }
