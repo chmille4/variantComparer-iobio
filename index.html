@@ -12,7 +12,7 @@
       <script src="js/d3multistack.js"></script>
       <script src="js/movingLineChart.js"> </script>
       <script src="js/d3.v3.min.js"></script>
-      <script src="js/socket.io.js"></script>      
+      <script src="js/socket.io.js"></script>     
       <script src="js/Scribl.1.1.3.min.js"> </script>
       <script src="js/ZeroClipboard.min.js"></script>
       <script src="js/html5slider.js"></script>
@@ -193,7 +193,7 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "http://ec2-23-20-163-151.compute-1.amazonaws.com:8030?cmd="
+            var url = "http://bamMerger.iobio.io?binary=true&cmd="
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -207,7 +207,7 @@
          
          function getBamHistogramUrl() {
             var bams = getBams();
-            var url = "http://ec2-54-242-163-187.compute-1.amazonaws.com:8020?cmd="
+            var url = "http://bamBinner.iobio.io?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -227,37 +227,37 @@
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            var url = "http://ec2-23-20-163-151.compute-1.amazonaws.com:7090?cmd=" + vcf + " "
+            var url = "http://tabix.iobio.io?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             var urlKeep = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcfkeepsamples - '
-                      + getStaticVcfUrl() + ' '
+             var urlKeep = 'http://vcflib.iobio.io?cmd=vcfkeepsamples - '
+                      + encodeURIComponent(getStaticVcfUrl()) + ' '
                       + getBamIds().join(' ');
              
-             var urlFixup = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffixup - ' + encodeURI(urlKeep) ;
+             var urlFixup = 'http://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
              
-             var urlAc = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "AC > 0" '
-                     + encodeURI(urlFixup);            
+             var urlAc = 'http://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
+                     + encodeURIComponent(encodeURI(urlFixup));            
 
              return encodeURI(urlAc);        
          }
          
          
          function getFreebayesUrl() {
-            var urlF = "http://ec2-50-19-207-171.compute-1.amazonaws.com:8080?cmd=-f ./data/references/hs_ref_chr"
+            var urlF = "http://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
                      + getChromosome() + ".fa"                     
-                     + ' ' + getBamDataUrl();
+                     + ' ' + encodeURIComponent(getBamDataUrl());
                      
             var qualThresh = $("#freebayes-slider").val()
-            var urlQ = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
-                      + encodeURI(urlF);
+            var urlQ = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+                      + encodeURIComponent(encodeURI(urlF));
                       
-            var url = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "TYPE = snp" '
-                    + encodeURI(urlQ);
+            var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
+                    + encodeURIComponent(encodeURI(urlQ));
             
             // filter on variantType - SNP only
 
@@ -265,15 +265,15 @@
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'http://ec2-54-242-163-187.compute-1.amazonaws.com:8061?cmd=view -vcg '
-                      + encodeURI('http://ec2-54-234-247-160.compute-1.amazonaws.com:8060?cmd=mpileup -uf ./data/references/hs_ref_chr'
+            var urlS = 'http://bcftools.iobio.io?cmd=view -vcg '
+                      + encodeURIComponent(encodeURI('http://samtools.iobio.io?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
-                      + ' ' + getBamDataUrl());
+                      + ' ' + encodeURIComponent(getBamDataUrl())));
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'http://ec2-50-19-207-171.compute-1.amazonaws.com:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
-                    + encodeURI(urlS);
-            
+            var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+                    + encodeURIComponent(encodeURI(urlS));;
+        
             return encodeURI(url);
          }
          
@@ -294,7 +294,7 @@
          function getBamData() {
             var graph = new movingLineChart("#bam-data", getScaleMin(),getScaleMax(), $("#bam-data").width(), 60, "basis", true, 1000, 1000);
             var url = getBamHistogramUrl();
-            var socket = io.connect(url);
+            var socket = io.connect(url, {port: 80});
             socket.on('results', function(res) {
               var results = JSON.parse(res.data);
               for (var i=0; i < results.length; i++){
@@ -323,7 +323,7 @@
             // scribl3.glyph.color = "#f36a22";
             // scribl3.draw();
             var url = getFilteredVcfUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true });
+            var socket = io.connect(url, { 'force new connection' : true, port:80 });
             socket.on('results', function(res) {
                var variant = JSON.parse(res.data).data;
                if(variant == undefined) return;
@@ -371,7 +371,7 @@
             });   
             socket.on('end', function() { 
                window.GDone = true;
-               if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
+              // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
             });
             socket.emit('run', { 'url': url })                     
          }
@@ -404,7 +404,7 @@
             // scribl2.glyph.color = "#f36a22";
             // scribl2.draw();
             var url = getFreebayesUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true });
+            var socket = io.connect(url, { 'force new connection' : true, port:80 });
             if (!socket.$events || socket.$events['results'] == undefined)  {
                 socket.on('results', function(res) {
                    var variant = JSON.parse(res.data).data;
@@ -473,7 +473,7 @@
             // scribl1.glyph.color = "#2d8fc1"
             // scribl2.draw();
             var url = getSamtoolsUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true });
+            var socket = io.connect(url, { 'force new connection' : true, port:80 });
             if (!socket.$events || socket.$events['results'] == undefined)  {
                 socket.on('results', function(res) {
                    var variant = JSON.parse(res.data).data;
