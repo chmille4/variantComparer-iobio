@@ -193,10 +193,8 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "ws://0.0.0.0:8030?binary=true&cmd="
-            // for (var i=0; i < bams.length; i++) {
-            //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
-            // }
+            var url = "ws://bamMerger.iobio.io?binary=true&cmd="
+
             url += getChromosome() + ":" + getScaleMin() + "-" + getScaleMax();
             for (var i=0; i < bams.length; i++) {
                url += " '" + bams[i] + "'";
@@ -207,7 +205,7 @@
          
          function getBamHistogramUrl() {
             var bams = getBams();
-            var url = "ws://0.0.0.0:8020?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
+            var url = "ws://bamBinner.iobio.io?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -227,71 +225,51 @@
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            // var url = "http://tabix.iobio.io?cmd=" + vcf + " "
-            //         + chr + ":" + getScaleMin() + "-" + getScaleMax();
-            var url = "ws://0.0.0.0:7090?cmd=" + vcf + " "
+            var url = "ws://tabix.iobio.io?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             // var urlKeep = 'http://vcflib.iobio.io?cmd=vcfkeepsamples - '
-             //          + encodeURIComponent(getStaticVcfUrl()) + ' '
-             //          + getBamIds().join(' ');
-             var urlKeep = 'ws://0.0.0.0:7080?cmd=vcfkeepsamples - '
+             var urlKeep = 'ws://vcflib.iobio.io?cmd=vcfkeepsamples - '
                       + encodeURIComponent(getStaticVcfUrl()) + ' '
-                      + getBamIds().join(' ');
+                      + getBamIds().join(' ');             
              
+             var urlFixup = 'ws://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
              
-             // var urlFixup = 'http://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
-             var urlFixup = 'ws://0.0.0.0:7080?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
-             
-             // var urlAc = 'http://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
-             //         + encodeURIComponent(encodeURI(urlFixup));            
-             var urlAc = 'ws://0.0.0.0:7080?cmd=vcffilter -f "AC > 0" '
+             var urlAc = 'ws://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
                      + encodeURIComponent(encodeURI(urlFixup));            
-             
 
              return encodeURI(urlAc);        
          }
          
          
          function getFreebayesUrl() {
-            // var urlF = "http://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
-            //          + getChromosome() + ".fa"                     
-            //          + ' ' + encodeURIComponent(getBamDataUrl());
-            var urlF = "ws://0.0.0.0:8080?cmd=-f ./data/references/hs_ref_chr"
+            var urlF = "ws://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
                      + getChromosome() + ".fa"                     
                      + ' ' + encodeURIComponent(getBamDataUrl());
-            
                      
             var qualThresh = $("#freebayes-slider").val()
-            // var urlQ = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
-            //           + encodeURIComponent(encodeURI(urlF));
-            var urlQ = 'ws://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var urlQ = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                       + encodeURIComponent(encodeURI(urlF));
-            
                       
-            // var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
-            //         + encodeURIComponent(encodeURI(urlQ));
-            var url = 'ws://0.0.0.0:7080?cmd=vcffilter -f "TYPE = snp" '
+            var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
                     + encodeURIComponent(encodeURI(urlQ));
-            
             
             // filter on variantType - SNP only
 
-            return encodeURI(urlF);
+            return encodeURI(url);
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'ws://0.0.0.0:8061?cmd=view -vcg '
-                      + encodeURIComponent(encodeURI('http://0.0.0.0:8060?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
+            var urlS = 'ws://bcftools.iobio.io?cmd=view -vcg '
+                      + encodeURIComponent(encodeURI('ws://samtools.iobio.io?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
                       + ' ' + encodeURIComponent(getBamDataUrl())));
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'ws://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                     + encodeURIComponent(encodeURI(urlS));;
         
             return encodeURI(url);
@@ -315,7 +293,6 @@
             var graph = new movingLineChart("#bam-data", getScaleMin(),getScaleMax(), $("#bam-data").width(), 60, "basis", true, 1000, 1000);
             var url = getBamHistogramUrl();
             var client = BinaryClient(url);
-            // var url = encodeURI( this.iobio.bamstatsAlive + '?cmd=-u 1000 -s ' + start + " -l " + parseInt(end-start) + " " + encodeURIComponent(this._getBamUrl(chr,start,end)) );
             client.on('open', function(stream){
                var stream = client.createStream({event:'run', params : {'url':url}});
                var buffer = "";
