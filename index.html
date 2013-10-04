@@ -12,7 +12,7 @@
       <script src="js/d3multistack.js"></script>
       <script src="js/movingLineChart.js"> </script>
       <script src="js/d3.v3.min.js"></script>
-      <script src="js/socket.io.js"></script>     
+      <script src="js/binary.js"></script>
       <script src="js/Scribl.1.1.3.min.js"> </script>
       <script src="js/ZeroClipboard.min.js"></script>
       <script src="js/html5slider.js"></script>
@@ -193,7 +193,7 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "http://bamMerger.iobio.io?binary=true&cmd="
+            var url = "ws://0.0.0.0:8030?binary=true&cmd="
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -207,7 +207,7 @@
          
          function getBamHistogramUrl() {
             var bams = getBams();
-            var url = "http://bamBinner.iobio.io?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
+            var url = "ws://0.0.0.0:8020?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -227,51 +227,71 @@
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            var url = "http://tabix.iobio.io?cmd=" + vcf + " "
+            // var url = "http://tabix.iobio.io?cmd=" + vcf + " "
+            //         + chr + ":" + getScaleMin() + "-" + getScaleMax();
+            var url = "ws://0.0.0.0:7090?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             var urlKeep = 'http://vcflib.iobio.io?cmd=vcfkeepsamples - '
+             // var urlKeep = 'http://vcflib.iobio.io?cmd=vcfkeepsamples - '
+             //          + encodeURIComponent(getStaticVcfUrl()) + ' '
+             //          + getBamIds().join(' ');
+             var urlKeep = 'ws://0.0.0.0:7080?cmd=vcfkeepsamples - '
                       + encodeURIComponent(getStaticVcfUrl()) + ' '
                       + getBamIds().join(' ');
              
-             var urlFixup = 'http://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
              
-             var urlAc = 'http://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
+             // var urlFixup = 'http://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
+             var urlFixup = 'ws://0.0.0.0:7080?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
+             
+             // var urlAc = 'http://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
+             //         + encodeURIComponent(encodeURI(urlFixup));            
+             var urlAc = 'ws://0.0.0.0:7080?cmd=vcffilter -f "AC > 0" '
                      + encodeURIComponent(encodeURI(urlFixup));            
+             
 
              return encodeURI(urlAc);        
          }
          
          
          function getFreebayesUrl() {
-            var urlF = "http://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
+            // var urlF = "http://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
+            //          + getChromosome() + ".fa"                     
+            //          + ' ' + encodeURIComponent(getBamDataUrl());
+            var urlF = "ws://0.0.0.0:8080?cmd=-f ./data/references/hs_ref_chr"
                      + getChromosome() + ".fa"                     
                      + ' ' + encodeURIComponent(getBamDataUrl());
+            
                      
             var qualThresh = $("#freebayes-slider").val()
-            var urlQ = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            // var urlQ = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            //           + encodeURIComponent(encodeURI(urlF));
+            var urlQ = 'ws://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                       + encodeURIComponent(encodeURI(urlF));
+            
                       
-            var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
+            // var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
+            //         + encodeURIComponent(encodeURI(urlQ));
+            var url = 'ws://0.0.0.0:7080?cmd=vcffilter -f "TYPE = snp" '
                     + encodeURIComponent(encodeURI(urlQ));
+            
             
             // filter on variantType - SNP only
 
-            return encodeURI(url);
+            return encodeURI(urlF);
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'http://bcftools.iobio.io?cmd=view -vcg '
-                      + encodeURIComponent(encodeURI('http://samtools.iobio.io?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
+            var urlS = 'ws://0.0.0.0:8061?cmd=view -vcg '
+                      + encodeURIComponent(encodeURI('http://0.0.0.0:8060?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
                       + ' ' + encodeURIComponent(getBamDataUrl())));
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var url = 'ws://0.0.0.0:7080?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                     + encodeURIComponent(encodeURI(urlS));;
         
             return encodeURI(url);
@@ -294,15 +314,28 @@
          function getBamData() {
             var graph = new movingLineChart("#bam-data", getScaleMin(),getScaleMax(), $("#bam-data").width(), 60, "basis", true, 1000, 1000);
             var url = getBamHistogramUrl();
-            var socket = io.connect(url, {port: 80});
-            socket.on('results', function(res) {
-              var results = JSON.parse(res.data);
-              for (var i=0; i < results.length; i++){
-                 graph.addPoint( parseInt(results[i]) );
-              }
+            var client = BinaryClient(url);
+            // var url = encodeURI( this.iobio.bamstatsAlive + '?cmd=-u 1000 -s ' + start + " -l " + parseInt(end-start) + " " + encodeURIComponent(this._getBamUrl(chr,start,end)) );
+            client.on('open', function(stream){
+               var stream = client.createStream({event:'run', params : {'url':url}});
+               var buffer = "";
+               stream.on('data', function(res, options) {
+                   var  data = JSON.parse(res);
+                   for (var i=0; i < data.length; i++)
+                       graph.addPoint( parseInt(data[i]) );
+               });
             });
             
-            socket.emit('run', { 'url': url })         
+            
+            // var socket = io.connect(url, {port: 80});
+            // socket.on('results', function(res) {
+            //   var results = JSON.parse(res.data);
+            //   for (var i=0; i < results.length; i++){
+            //      graph.addPoint( parseInt(results[i]) );
+            //   }
+            // });
+            // 
+            // socket.emit('run', { 'url': url })         
          }
          
          function get1000gData() {
@@ -323,57 +356,59 @@
             // scribl3.glyph.color = "#f36a22";
             // scribl3.draw();
             var url = getFilteredVcfUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true, port:80 });
-            socket.on('results', function(res) {
-               var variant = JSON.parse(res.data).data;
-               if(variant == undefined) return;
-               // for (var i=0; i < data.length; i++) {               
-                  if (variant.pos < getScaleMin() || variant.pos > getScaleMax()) return;
-                  for (var i=0; i < variant.genotypes.length; i++) {
-                      if (variant.genotypes[i] == '.') continue;                      
-                      var genos = variant.genotypes[i].split(/,|:|\||\//);
-                      var isgeno = false;
-                      for (var j=0; j<genos.length; j++) {
-                          if (genos[j] > 0) isgeno = true;
+            // var socket = io.connect(url, { 'force new connection' : true, port:80 });
+            //             socket.on('results', function(res) {
+            var client = BinaryClient(url);
+            client.on('open', function(stream){
+               var stream = client.createStream({event:'run', params : {'url':url}});
+               stream.on('data', function(data, options) {            
+                   var variant = JSON.parse(data).data;
+                   if(variant == undefined) return;
+                   // for (var i=0; i < data.length; i++) {               
+                      if (variant.pos < getScaleMin() || variant.pos > getScaleMax()) return;
+                      for (var i=0; i < variant.genotypes.length; i++) {
+                          if (variant.genotypes[i] == '.') continue;                      
+                          var genos = variant.genotypes[i].split(/,|:|\||\//);
+                          var isgeno = false;
+                          for (var j=0; j<genos.length; j++) {
+                              if (genos[j] > 0) isgeno = true;
+                          }
+                          if (!isgeno) return;
                       }
-                      if (!isgeno) return;
-                  }
-                  var ntSize = 1;
-                  if (scribl3.pixelsToNts() < window.minPxSize)
-                     ntSize = Math.round(window.minPxSize / scribl3.pixelsToNts() * ntSize);
-                  var gene = scribl3.addGene(parseInt(variant.pos), ntSize, '+');
-                  if (window.variantPos[variant.pos] == undefined) window.variantPos[variant.pos] = [];
-                  window.variantPos[variant.pos].push('g');
-                  gene.color = "#2ca02c";
-                  // make sure feature is in correct spot
+                      var ntSize = 1;
+                      if (scribl3.pixelsToNts() < window.minPxSize)
+                         ntSize = Math.round(window.minPxSize / scribl3.pixelsToNts() * ntSize);
+                      var gene = scribl3.addGene(parseInt(variant.pos), ntSize, '+');
+                      if (window.variantPos[variant.pos] == undefined) window.variantPos[variant.pos] = [];
+                      window.variantPos[variant.pos].push('g');
+                      gene.color = "#2ca02c";
+                      // make sure feature is in correct spot
 
-                  // geneHash2[variant.pos] = gene;
-                  // if(geneHash1[variant.pos]) {
-                  //    var color = gene.color;
-                  //    gene.color = ['#ADFF99', '#327424'];
-                  // }
-                  scribl3.scale.min = getScaleMin();
-                  scribl3.scale.max = getScaleMax();
-                  gene.redraw();
+                      // geneHash2[variant.pos] = gene;
+                      // if(geneHash1[variant.pos]) {
+                      //    var color = gene.color;
+                      //    gene.color = ['#ADFF99', '#327424'];
+                      // }
+                      scribl3.scale.min = getScaleMin();
+                      scribl3.scale.max = getScaleMax();
+                      gene.redraw();
                   
-                  window.requestAnimationFrame( function() {
-                      var d = generateVariantTotals();
-                      // window.stackEach1.update( [ [{name:"freebayes",x:0,y:d[4]+d[6],}, {name:"samtools",x:1,y:d[5]+d[6],}], [{name:"other",x:0,y:d[5]+d[2]},{name:"other",x:1,y:d[4]+d[2]}] ] );
-                      window.stackEach1.update( [ [{type:"freebayes",x:0,y:d[4]+d[6],}, {type:"samtools",x:1,y:d[5]+d[6],},{type:"1000g",x:2,y:d[6]+d[4],}, {type:"1000g",x:3,y:d[6]+d[5],}], [{type:"other",x:0,y:d[5]+d[2], total:d[2]+d[4]+d[5]+d[6]},{type:"other",x:1,y:d[4]+d[2],total:d[2]+d[4]+d[5]+d[6]},{type:"other",x:1,y:d[3]+d[1],total:d[1]+d[3]+d[4]+d[6]},{type:"other",x:2,y:d[0]+d[3],total:d[0]+d[3]+d[5]+d[6]}] ] );
-                     // window.stackEach2.update( [ [{name:"1000g",x:0,y:d[6]+d[4],}, {name:"1000g",x:1,y:d[6]+d[5],}], [{name:"other",x:0,y:d[3]+d[1]},{name:"other",x:1,y:d[0]+d[3]}] ] );
-                      window.stackAll.update([ [{name:"1",x:0,y:d[0]+d[1]+d[2]}], [{name:"2",x:0,y:d[3]+d[4]+d[5]}], [{name:'all',x:0,y:d[6]}]]);
-                      window.pie.updateChart( d )
-                  });
-                  
-                  
-              // }
-              
-            });   
-            socket.on('end', function() { 
-               window.GDone = true;
-              // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
+                      window.requestAnimationFrame( function() {
+                          var d = generateVariantTotals();
+                          // window.stackEach1.update( [ [{name:"freebayes",x:0,y:d[4]+d[6],}, {name:"samtools",x:1,y:d[5]+d[6],}], [{name:"other",x:0,y:d[5]+d[2]},{name:"other",x:1,y:d[4]+d[2]}] ] );
+                          window.stackEach1.update( [ [{type:"freebayes",x:0,y:d[4]+d[6],}, {type:"samtools",x:1,y:d[5]+d[6],},{type:"1000g",x:2,y:d[6]+d[4],}, {type:"1000g",x:3,y:d[6]+d[5],}], [{type:"other",x:0,y:d[5]+d[2], total:d[2]+d[4]+d[5]+d[6]},{type:"other",x:1,y:d[4]+d[2],total:d[2]+d[4]+d[5]+d[6]},{type:"other",x:1,y:d[3]+d[1],total:d[1]+d[3]+d[4]+d[6]},{type:"other",x:2,y:d[0]+d[3],total:d[0]+d[3]+d[5]+d[6]}] ] );
+                         // window.stackEach2.update( [ [{name:"1000g",x:0,y:d[6]+d[4],}, {name:"1000g",x:1,y:d[6]+d[5],}], [{name:"other",x:0,y:d[3]+d[1]},{name:"other",x:1,y:d[0]+d[3]}] ] );
+                          window.stackAll.update([ [{name:"1",x:0,y:d[0]+d[1]+d[2]}], [{name:"2",x:0,y:d[3]+d[4]+d[5]}], [{name:'all',x:0,y:d[6]}]]);
+                          window.pie.updateChart( d )
+                      });
+                });
             });
-            socket.emit('run', { 'url': url })                     
+            
+            // socket.on('end', function() { 
+            //    window.GDone = true;
+            //   // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
+            // });
+            // socket.emit('run', { 'url': url })                     
          }
          
          
@@ -404,10 +439,15 @@
             // scribl2.glyph.color = "#f36a22";
             // scribl2.draw();
             var url = getFreebayesUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true, port:80 });
-            if (!socket.$events || socket.$events['results'] == undefined)  {
-                socket.on('results', function(res) {
-                   var variant = JSON.parse(res.data).data;
+            // var socket = io.connect(url, { 'force new connection' : true, port:80 });
+            // if (!socket.$events || socket.$events['results'] == undefined)  {
+            //     socket.on('results', function(res) {
+            var client = BinaryClient(url);
+            client.on('open', function(stream){
+               var stream = client.createStream({event:'run', params : {'url':url}});
+               var buffer = "";
+               stream.on('data', function(data, options) {            
+                   var variant = JSON.parse(data).data;
                    if(variant == undefined) return;
                    // for (var i=0; i < data.length; i++) {               
                       if (variant.pos < getScaleMin() || variant.pos > getScaleMax()) return;
@@ -438,14 +478,14 @@
                       });
               
                 });   
-            }
-            if (!socket.$events || socket.$events['end'] == undefined) {
-                socket.on('end', function() { 
-                   window.freebayesDone = true;
-                  // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
-                });
-            }
-            socket.emit('run', { 'url': url })                     
+            });
+            // if (!socket.$events || socket.$events['end'] == undefined) {
+            //     socket.on('end', function() { 
+            //        window.freebayesDone = true;
+            //       // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
+            //     });
+            // }
+            // socket.emit('run', { 'url': url })                     
          }
          
          function getSamtoolsData() {
@@ -473,10 +513,15 @@
             // scribl1.glyph.color = "#2d8fc1"
             // scribl2.draw();
             var url = getSamtoolsUrl() + "&format=json&parseByLine=true";
-            var socket = io.connect(url, { 'force new connection' : true, port:80 });
-            if (!socket.$events || socket.$events['results'] == undefined)  {
-                socket.on('results', function(res) {
-                   var variant = JSON.parse(res.data).data;
+            // var socket = io.connect(url, { 'force new connection' : true, port:80 });
+            // if (!socket.$events || socket.$events['results'] == undefined)  {
+            //     socket.on('results', function(res) {
+            var client = BinaryClient(url);
+            client.on('open', function(stream){
+               var stream = client.createStream({event:'run', params : {'url':url}});
+               var buffer = "";
+               stream.on('data', function(data, options) {                                   
+                   var variant = JSON.parse(data).data;
                    if(variant == undefined) return;
 
                    if (variant.pos < getScaleMin() || variant.pos > getScaleMax()) return;
@@ -510,14 +555,14 @@
                          window.pie.updateChart( d )
                    });
                 });
-            }
-            if (!socket.$events || socket.$events['end'] == undefined)  {
-                socket.on('end', function() { 
-                   window.samtoolsDone = true;
-                  // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
-                });
-            }
-            socket.emit('run', { 'url': url })                     
+            });
+            // if (!socket.$events || socket.$events['end'] == undefined)  {
+            //     socket.on('end', function() { 
+            //        window.samtoolsDone = true;
+            //       // if (window.GDone && window.freebayesDone && window.samtoolsDone) drawIntersection();
+            //     });
+            // }
+            // socket.emit('run', { 'url': url })                     
          }  
          
          function generateVariantTotals() {
