@@ -247,15 +247,16 @@
          
          function getFreebayesUrl() {
             var urlF = "ws://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
-                     + getChromosome() + ".fa"                     
-                     + ' ' + encodeURIComponent(getBamDataUrl());
-                     
+                + getChromosome() + ".fa"                     
+                + ' ' + encodeURIComponent(getBamDataUrl());
+                                                      
             var qualThresh = $("#freebayes-slider").val()
             var urlQ = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
-                      + encodeURIComponent(encodeURI(urlF));
+                + encodeURIComponent(encodeURI(urlF));            
                       
             var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
-                    + encodeURIComponent(encodeURI(urlQ));
+                + encodeURIComponent(encodeURI(urlQ));
+            
             
             // filter on variantType - SNP only
 
@@ -266,7 +267,7 @@
             var urlS = 'ws://bcftools.iobio.io?cmd=view -vcg '
                       + encodeURIComponent(encodeURI('ws://samtools.iobio.io?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
-                      + ' ' + encodeURIComponent(getBamDataUrl())));
+                      + ' ' + encodeURIComponent(getBamDataUrl())));            
 
             var qualThresh = $("#samtools-slider").val()
             var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
@@ -339,6 +340,7 @@
             client.on('open', function(stream){
                var stream = client.createStream({event:'run', params : {'url':url}});
                stream.on('data', function(data, options) {            
+                   if (data == undefined) return;
                    var variant = JSON.parse(data).data;
                    if(variant == undefined) return;
                    // for (var i=0; i < data.length; i++) {               
@@ -422,8 +424,8 @@
             var client = BinaryClient(url);
             client.on('open', function(stream){
                var stream = client.createStream({event:'run', params : {'url':url}});
-               var buffer = "";
                stream.on('data', function(data, options) {            
+                   if (data == undefined) return;
                    var variant = JSON.parse(data).data;
                    if(variant == undefined) return;
                    // for (var i=0; i < data.length; i++) {               
@@ -496,8 +498,8 @@
             var client = BinaryClient(url);
             client.on('open', function(stream){
                var stream = client.createStream({event:'run', params : {'url':url}});
-               var buffer = "";
                stream.on('data', function(data, options) {                                   
+                   if (data == undefined) return;
                    var variant = JSON.parse(data).data;
                    if(variant == undefined) return;
 
