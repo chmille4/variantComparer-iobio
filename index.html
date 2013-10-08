@@ -45,6 +45,8 @@
       
       <script type="text/javascript">
       $(document).ready(function() {
+          var is_chrome = navigator.userAgent.toLowerCase().indexOf('chrome') > -1;
+          if (!is_chrome) alert("Warning! This site requires Google Chrome to function properly");
           (function () {
             var lastTime = 0;
             var vendors = ['ms', 'moz', 'webkit', 'o'];
