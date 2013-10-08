@@ -193,7 +193,7 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "ws://bamMerger.iobio.io?binary=true&cmd="
+            var url = "http://bamMerger.iobio.io?binary=true&cmd="
 
             url += getChromosome() + ":" + getScaleMin() + "-" + getScaleMax();
             for (var i=0; i < bams.length; i++) {
@@ -225,18 +225,18 @@
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            var url = "ws://tabix.iobio.io?cmd=" + vcf + " "
+            var url = "http://tabix.iobio.io?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             var urlKeep = 'ws://vcflib.iobio.io?cmd=vcfkeepsamples - '
+             var urlKeep = 'http://vcflib.iobio.io?cmd=vcfkeepsamples - '
                       + encodeURIComponent(getStaticVcfUrl()) + ' '
                       + getBamIds().join(' ');             
              
-             var urlFixup = 'ws://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
+             var urlFixup = 'http://vcflib.iobio.io?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
              
              var urlAc = 'ws://vcflib.iobio.io?cmd=vcffilter -f "AC > 0" '
                      + encodeURIComponent(encodeURI(urlFixup));            
@@ -246,12 +246,12 @@
          
          
          function getFreebayesUrl() {
-            var urlF = "ws://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
+            var urlF = "http://freebayes.iobio.io?cmd=-f ./data/references/hs_ref_chr"
                 + getChromosome() + ".fa"                     
                 + ' ' + encodeURIComponent(getBamDataUrl());
                                                       
             var qualThresh = $("#freebayes-slider").val()
-            var urlQ = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var urlQ = 'http://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                 + encodeURIComponent(encodeURI(urlF));            
                       
             var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "TYPE = snp" '
@@ -264,13 +264,13 @@
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'ws://bcftools.iobio.io?cmd=view -vcg '
-                      + encodeURIComponent(encodeURI('ws://samtools.iobio.io?binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
+            var urlS = 'http://bcftools.iobio.io?cmd=view -vcg '
+                      + encodeURIComponent(encodeURI('http://samtools.iobio.io?&binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
                       + ' ' + encodeURIComponent(getBamDataUrl())));            
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'ws://vcflib.iobio.io?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var url = 'ws://vcflib.iobio.io?protocol=http&cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                     + encodeURIComponent(encodeURI(urlS));;
         
             return encodeURI(url);
