@@ -195,7 +195,7 @@
          
          function getBamDataUrl() {
             var bams = getBams();
-            var url = "http://nv-blue.iobio.io/bammerger/?binary=true&cmd="
+            var url = "http://services.iobio.io/bammerger/?binary=true&cmd="
 
             url += getChromosome() + ":" + getScaleMin() + "-" + getScaleMax();
             for (var i=0; i < bams.length; i++) {
@@ -207,7 +207,7 @@
          
          function getBamHistogramUrl() {
             var bams = getBams();
-            var url = "ws://nv-blue.iobio.io/bambinner/?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
+            var url = "ws://services.iobio.io/bambinner/?cmd=" // REMEMBER TO ADD BINARY FLAGS!!!!!!!!
             // for (var i=0; i < bams.length; i++) {
             //    url += " -in <(samtools view -u " + bams[i] + " 11:108473-189473)"
             // }
@@ -227,20 +227,20 @@
             else var baseUrl = "http://s3.amazonaws.com/1000genomes/release/20101123/interim_phase1_release"
             
             var vcf = "-h '" + baseUrl + "/ALL.chr" + chr + ".phase1.projectConsensus.genotypes.vcf.gz'";
-            var url = "http://nv-blue.iobio.io/tabix/?cmd=" + vcf + " "
+            var url = "http://services.iobio.io/tabix/?cmd=" + vcf + " "
                     + chr + ":" + getScaleMin() + "-" + getScaleMax();
 
             return encodeURI(url);
          }
          
          function getFilteredVcfUrl() {
-             var urlKeep = 'http://nv-blue.iobio.io/vcflib/?cmd=vcfkeepsamples - '
+             var urlKeep = 'http://services.iobio.io/vcflib/?cmd=vcfkeepsamples - '
                       + encodeURIComponent(getStaticVcfUrl()) + ' '
                       + getBamIds().join(' ');             
              
-             var urlFixup = 'http://nv-blue.iobio.io/vcflib/?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
+             var urlFixup = 'http://services.iobio.io/vcflib/?cmd=vcffixup - ' + encodeURIComponent(encodeURI(urlKeep)) ;
              
-             var urlAc = 'ws://nv-blue.iobio.io/vcflib/?cmd=vcffilter -f "AC > 0" '
+             var urlAc = 'ws://services.iobio.io/vcflib/?cmd=vcffilter -f "AC > 0" '
                      + encodeURIComponent(encodeURI(urlFixup));            
 
              return encodeURI(urlAc);        
@@ -248,15 +248,15 @@
          
          
          function getFreebayesUrl() {
-            var urlF = "http://nv-blue.iobio.io/freebayes/?cmd=-f ./data/references/hs_ref_chr"
+            var urlF = "http://services.iobio.io/freebayes/?cmd=-f ./data/references/hs_ref_chr"
                 + getChromosome() + ".fa"                     
                 + ' ' + encodeURIComponent(getBamDataUrl());
                                                       
             var qualThresh = $("#freebayes-slider").val()
-            var urlQ = 'http://nv-blue.iobio.io/vcflib/?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var urlQ = 'http://services.iobio.io/vcflib/?cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                 + encodeURIComponent(encodeURI(urlF));            
                       
-            var url = 'ws://nv-blue.iobio.io/vcflib/?cmd=vcffilter -f "TYPE = snp" '
+            var url = 'ws://services.iobio.io/vcflib/?cmd=vcffilter -f "TYPE = snp" '
                 + encodeURIComponent(encodeURI(urlQ));
             
             
@@ -266,13 +266,13 @@
          }
          
          function getSamtoolsUrl() {
-            var urlS = 'http://nv-blue.iobio.io/bcftools/?cmd=view -vcg '
-                      + encodeURIComponent(encodeURI('http://nv-blue.iobio.io/samtools/?&binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
+            var urlS = 'http://services.iobio.io/bcftools/?cmd=view -vcg '
+                      + encodeURIComponent(encodeURI('http://services.iobio.io/samtools/?&binary=true&cmd=mpileup -uf ./data/references/hs_ref_chr'
                       + getChromosome() + ".fa"
                       + ' ' + encodeURIComponent(getBamDataUrl())));            
 
             var qualThresh = $("#samtools-slider").val()
-            var url = 'ws://nv-blue.iobio.io/vcflib/?protocol=http&cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
+            var url = 'ws://services.iobio.io/vcflib/?protocol=http&cmd=vcffilter -f "QUAL > ' + qualThresh + '" '
                     + encodeURIComponent(encodeURI(urlS));;
         
             return encodeURI(url);
